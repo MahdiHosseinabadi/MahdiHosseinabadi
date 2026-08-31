@@ -255,7 +255,7 @@ def main() -> int:
     parser.add_argument(
         "--max-rows",
         type=int,
-        default=100,
+        default=140,
     )
 
     args = parser.parse_args()
