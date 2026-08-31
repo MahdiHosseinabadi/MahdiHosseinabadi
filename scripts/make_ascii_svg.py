@@ -249,13 +249,13 @@ def main() -> int:
     parser.add_argument(
         "--cols",
         type=int,
-        default=140,
+        default=100,
     )
 
     parser.add_argument(
         "--max-rows",
         type=int,
-        default=140,
+        default=62,
     )
 
     args = parser.parse_args()
