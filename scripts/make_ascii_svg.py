@@ -32,6 +32,7 @@ CURSOR = "#39d353"
 
 STAGGER = 0.055         # seconds between row starts
 ROW_DUR = 0.34          # seconds for one row to wipe in
+LOOP = 10.0
 
 
 def to_grid(img: Image.Image, cols: int, max_rows: int) -> list[str]:
