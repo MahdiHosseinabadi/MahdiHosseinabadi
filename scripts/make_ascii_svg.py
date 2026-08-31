@@ -84,7 +84,7 @@ def build_svg(lines: list[str], static: bool = False) -> str:
             f'<clipPath id="w{i}"><rect x="{x0:.1f}" y="{y - 2:.1f}" '
             f'width="{seg_w:.1f}" height="{LINE_H + 3:.1f}">'
             f'<animate attributeName="width" from="0" to="{seg_w:.1f}" '
-            f'begin="{begin}s" dur="{ROW_DUR}s" fill="freeze"/></rect></clipPath>'
+f'begin="{begin}s" dur="{ROW_DUR}s" repeatCount="indefinite"/>'
         )
         body.append(
             f'<g clip-path="url(#w{i})"><text x="{x0:.1f}" y="{y + FONT_SIZE * 0.8:.1f}" '
@@ -96,7 +96,7 @@ def build_svg(lines: list[str], static: bool = False) -> str:
             f'fill="{CURSOR}" opacity="0">'
             f'<set attributeName="opacity" to="0.9" begin="{begin}s" fill="freeze"/>'
             f'<animate attributeName="x" from="{x0:.1f}" to="{x0 + seg_w:.1f}" '
-            f'begin="{begin}s" dur="{ROW_DUR}s" fill="freeze"/>'
+f'begin="{begin}s" dur="{ROW_DUR}s" repeatCount="indefinite"/>'
             f'<set attributeName="opacity" to="0" begin="{end}s" fill="freeze"/></rect>'
         )
 
