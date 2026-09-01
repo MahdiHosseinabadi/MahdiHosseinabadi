@@ -11,7 +11,7 @@
 <img
   src="./whoami.svg"
   width="1100"
-  alt="Mahdi Hosseinabadi ASCII portrait and info card"
+  alt="Mahdi Hosseinabadi identity and profile"
 />
 
 <h3><code>Mahdi@github ~ $ cat contact.txt</code></h3>

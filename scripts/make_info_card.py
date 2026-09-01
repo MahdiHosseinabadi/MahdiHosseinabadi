@@ -16,8 +16,8 @@ from xml.sax.saxutils import escape
 ROOT = Path(__file__).resolve().parent.parent
 
 # Rendered widths the README uses for the two side-by-side columns.
-ASCII_COL_W = 370
-CARD_COL_W = 490
+ASCII_COL_W = 495
+CARD_COL_W = 605
 
 # ---------------------------------------------------------------- EDIT ME ----
 USER = "Mahdi"
@@ -31,14 +31,14 @@ ROWS = [
 ]
 # ------------------------------------------------------------------------------
 
-W = 820
-PAD = 32
-BAR_H = 38
-FONT = 18
-LINE_H = 30
-MAX_LINE_H = 38     # cap so a tall card does not turn into double-spacing
+W = 760
+PAD = 24
+BAR_H = 42
+FONT = 21
+LINE_H = 40
+MAX_LINE_H = 43    # cap so a tall card does not turn into double-spacing
 BLOCK_GAP = 12
-WRAP = 60          # characters per value line before wrapping
+WRAP = 50          # characters per value line before wrapping
 
 BG = "#0d1117"
 BAR = "#161b22"

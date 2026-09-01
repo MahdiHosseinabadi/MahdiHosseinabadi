@@ -24,7 +24,7 @@ BG = "#0d1117"
 FG = "#c9d1d9"
 CURSOR = "#39d353"
 
-STAGGER = 0.055
+STAGGER = 0.06
 ROW_DUR = 0.34
 LOOP = 10.0
 
