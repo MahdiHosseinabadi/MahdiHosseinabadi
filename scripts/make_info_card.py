@@ -1,177 +1,574 @@
-"""Hand-author a neofetch-looking info card SVG.
-
-Title bar, then colored key/value rows. Keep the content here and not in the
-contribution graph -- the graph already covers the GitHub stats, so the card is
-for the story numbers can't tell.
-
-    python scripts/make_info_card.py     # writes info-card.svg
-    STATIC=1 python scripts/make_info_card.py   # frozen frame, no animation
-"""
+"""Generate an animated neofetch-style profile info card."""
 
 import os
 import re
 from pathlib import Path
 from xml.sax.saxutils import escape
 
+
 ROOT = Path(__file__).resolve().parent.parent
 
-# Rendered widths the README uses for the two side-by-side columns.
+
+# ---------------------------------------------------------------------------
+# Layout
+# ---------------------------------------------------------------------------
+
 ASCII_COL_W = 495
 CARD_COL_W = 605
 
-# ---------------------------------------------------------------- EDIT ME ----
-USER = "Mahdi"
-HOST = "MahdiHosseinabadi"
-ROWS = [
-    ("Now",        "Building Unity Games + Front-end work + Back-end work + UI design + Provision of accounting services"),
-    ("Stack",      "C / C++ | C# | Unity | JavaScript | Python | Sass | Next.js | Git | Office software"),
-    ("Highlights", "Design-to-code handoff, smart contracts, data-heavy UIs"),
-    ("Learning",   "Game Development, Website Design"),
-    ("Reach",      "@MahdiHosseinabadii · instagram.com/MahdiHosseinabadii"),
-]
-# ------------------------------------------------------------------------------
-
 W = 760
 PAD = 24
+
 BAR_H = 42
+
 FONT = 21
 LINE_H = 40
-MAX_LINE_H = 43    # cap so a tall card does not turn into double-spacing
+MAX_LINE_H = 43
+
 BLOCK_GAP = 12
-WRAP = 50          # characters per value line before wrapping
+WRAP = 50
+
+
+# ---------------------------------------------------------------------------
+# Profile information
+# ---------------------------------------------------------------------------
+
+USER = "Mahdi"
+HOST = "MahdiHosseinabadi"
+
+ROWS = [
+    (
+        "Now",
+        "Building Unity Games + Front-end work + Back-end work + "
+        "UI design + Provision of accounting services",
+    ),
+    (
+        "Stack",
+        "C / C++ | C# | Unity | JavaScript | Python | "
+        "Sass | Next.js | Git | Office software",
+    ),
+    (
+        "Highlights",
+        "Design-to-code handoff, smart contracts, data-heavy UIs",
+    ),
+    (
+        "Learning",
+        "Game Development, Website Design",
+    ),
+    (
+        "Reach",
+        "@MahdiHosseinabadii · instagram.com/MahdiHosseinabadii",
+    ),
+]
+
+
+# ---------------------------------------------------------------------------
+# Colors
+# ---------------------------------------------------------------------------
 
 BG = "#0d1117"
 BAR = "#161b22"
 STROKE = "#21262d"
+
 KEY = "#39d353"
 VAL = "#c9d1d9"
 DIM = "#8b949e"
 ACCENT = "#58a6ff"
 
-SWATCH = ["#161b22", "#0e4429", "#006d32", "#26a641",
-          "#39d353", "#69f0a0", "#58a6ff", "#c9d1d9"]
+SWATCH = [
+    "#161b22",
+    "#0e4429",
+    "#006d32",
+    "#26a641",
+    "#39d353",
+    "#69f0a0",
+    "#58a6ff",
+    "#c9d1d9",
+]
 
-MONO = ('ui-monospace, SFMono-Regular, Menlo, Consolas, '
-        '&quot;DejaVu Sans Mono&quot;, monospace')
+
+# ---------------------------------------------------------------------------
+# Font
+# ---------------------------------------------------------------------------
+
+MONO = (
+    "ui-monospace, SFMono-Regular, Menlo, Consolas, "
+    '&quot;DejaVu Sans Mono&quot;, monospace'
+)
+
+
+# ---------------------------------------------------------------------------
+# Animation
+# ---------------------------------------------------------------------------
+
+# مدت زمان ظاهر شدن هر خط
+ANIMATION_DURATION = 1.2
+
+# فاصله شروع هر خط
+ANIMATION_DELAY = 0.12
+
+# مدت زمان کامل یک چرخه
+LOOP_DURATION = 10.0
+
+# مدت مکث بعد از کامل شدن
+HOLD_DURATION = 4.0
 
 
 def wrap(text: str, width: int) -> list[str]:
-    out, line = [], ""
-    for word in text.split(" "):
+    """Wrap text into lines."""
+
+    lines = []
+    line = ""
+
+    for word in text.split():
         candidate = f"{line} {word}".strip()
+
         if len(candidate) > width and line:
-            out.append(line)
+            lines.append(line)
             line = word
         else:
             line = candidate
+
     if line:
-        out.append(line)
-    return out
+        lines.append(line)
+
+    return lines
 
 
 def build(target_h: float | None = None) -> str:
+    """Build the animated SVG."""
+
     static = os.environ.get("STATIC") == "1"
-    key_w = max(len(k) for k, _ in ROWS) + 2
 
-    # Lay the body out first so the panel height follows the content.
-    items: list[tuple[str, str, str]] = []   # (key, value, kind)
-    items.append(("", f"{USER}@{HOST}", "host"))
-    items.append(("", "-" * (len(USER) + len(HOST) + 1), "rule"))
+    key_w = max(
+        len(key)
+        for key, _ in ROWS
+    ) + 2
+
+    # -----------------------------------------------------------------------
+    # Prepare content
+    # -----------------------------------------------------------------------
+
+    items: list[tuple[str, str, str]] = []
+
+    items.append(
+        (
+            "",
+            f"{USER}@{HOST}",
+            "host",
+        )
+    )
+
+    items.append(
+        (
+            "",
+            "-" * (len(USER) + len(HOST) + 1),
+            "rule",
+        )
+    )
+
     for key, value in ROWS:
-        for i, chunk in enumerate(wrap(value, WRAP)):
-            items.append((key if i == 0 else "", chunk, "row"))
+        wrapped = wrap(value, WRAP)
 
-    body_top = BAR_H + BLOCK_GAP + PAD / 2
-    chrome = body_top + BLOCK_GAP + 40 + PAD / 2
+        for index, chunk in enumerate(wrapped):
+            items.append(
+                (
+                    key if index == 0 else "",
+                    chunk,
+                    "row",
+                )
+            )
+
+    # -----------------------------------------------------------------------
+    # Calculate height
+    # -----------------------------------------------------------------------
+
+    body_top = (
+        BAR_H
+        + BLOCK_GAP
+        + PAD / 2
+    )
+
+    chrome = (
+        body_top
+        + BLOCK_GAP
+        + 40
+        + PAD / 2
+    )
+
     line_h = LINE_H
-    height = int(chrome + len(items) * LINE_H)
+
+    height = int(
+        chrome
+        + len(items) * LINE_H
+    )
+
     if target_h and target_h > height:
-        # Spend the slack on leading first, then leave the rest as bottom air.
-        line_h = min(MAX_LINE_H, (target_h - chrome) / len(items))
+        line_h = min(
+            MAX_LINE_H,
+            (target_h - chrome) / len(items),
+        )
+
         height = int(target_h)
 
+    # -----------------------------------------------------------------------
+    # SVG parts
+    # -----------------------------------------------------------------------
+
     parts = [
-        f'<rect width="{W}" height="{height}" rx="10" fill="{BG}"/>',
-        f'<path d="M0 10a10 10 0 0 1 10-10h{W - 20}a10 10 0 0 1 10 10v{BAR_H - 10}H0z" fill="{BAR}"/>',
-        f'<line x1="0" y1="{BAR_H}" x2="{W}" y2="{BAR_H}" stroke="{STROKE}"/>',
-        f'<circle cx="24" cy="{BAR_H / 2}" r="6" fill="#ff5f56"/>',
-        f'<circle cx="46" cy="{BAR_H / 2}" r="6" fill="#ffbd2e"/>',
-        f'<circle cx="68" cy="{BAR_H / 2}" r="6" fill="#27c93f"/>',
-        f'<text x="{W / 2}" y="{BAR_H / 2 + 5}" text-anchor="middle" font-size="13" '
-        f'fill="{DIM}">{escape(USER)}@{escape(HOST)}: ~ — neofetch</text>',
+        # Background
+        f'<rect '
+        f'width="{W}" '
+        f'height="{height}" '
+        f'rx="10" '
+        f'fill="{BG}"/>',
+
+        # Top bar
+        f'<path '
+        f'd="M0 10a10 10 0 0 1 10-10'
+        f'h{W - 20}'
+        f'a10 10 0 0 1 10 10'
+        f'v{BAR_H - 10}'
+        f'H0z" '
+        f'fill="{BAR}"/>',
+
+        # Divider
+        f'<line '
+        f'x1="0" '
+        f'y1="{BAR_H}" '
+        f'x2="{W}" '
+        f'y2="{BAR_H}" '
+        f'stroke="{STROKE}"/>',
+
+        # Window buttons
+        f'<circle '
+        f'cx="24" '
+        f'cy="{BAR_H / 2}" '
+        f'r="6" '
+        f'fill="#ff5f56"/>',
+
+        f'<circle '
+        f'cx="46" '
+        f'cy="{BAR_H / 2}" '
+        f'r="6" '
+        f'fill="#ffbd2e"/>',
+
+        f'<circle '
+        f'cx="68" '
+        f'cy="{BAR_H / 2}" '
+        f'r="6" '
+        f'fill="#27c93f"/>',
+
+        # Terminal title
+        f'<text '
+        f'x="{W / 2}" '
+        f'y="{BAR_H / 2 + 5}" '
+        f'text-anchor="middle" '
+        f'font-size="13" '
+        f'fill="{DIM}">'
+        f'{escape(USER)}@{escape(HOST)}: ~ — neofetch'
+        f'</text>',
     ]
 
-    for i, (key, value, kind) in enumerate(items):
-        y = body_top + i * line_h + FONT
-        delay = "" if static else f' style="animation-delay:{0.09 * i + 0.15:.2f}s"'
-        cls = "" if static else ' class="ln"'
-        if kind == "host":
-            parts.append(
-                f'<text{cls}{delay} x="{PAD}" y="{y:.1f}" fill="{KEY}" '
-                f'font-weight="700">{escape(value)}</text>'
-            )
-        elif kind == "rule":
-            parts.append(
-                f'<text{cls}{delay} x="{PAD}" y="{y:.1f}" fill="{DIM}">{escape(value)}</text>'
-            )
-        else:
-            label = f"{key}:".ljust(key_w) if key else " " * key_w
-            parts.append(
-                f'<text{cls}{delay} x="{PAD}" y="{y:.1f}" xml:space="preserve">'
-                f'<tspan fill="{KEY}" font-weight="700">{escape(label)}</tspan>'
-                f'<tspan fill="{VAL if key else DIM}">{escape(value)}</tspan></text>'
-            )
+    # -----------------------------------------------------------------------
+    # Content rows
+    # -----------------------------------------------------------------------
 
-    sw_y = height - PAD - 12
-    for i, color in enumerate(SWATCH):
-        delay = "" if static else f' style="animation-delay:{0.09 * len(items) + 0.05 * i:.2f}s"'
-        cls = "" if static else ' class="ln"'
-        parts.append(
-            f'<rect{cls}{delay} x="{PAD + i * 26}" y="{sw_y}" width="20" height="20" '
-            f'rx="4" fill="{color}" stroke="{STROKE}"/>'
+    for index, (key, value, kind) in enumerate(items):
+
+        y = (
+            body_top
+            + index * line_h
+            + FONT
         )
-    parts.append(
-        f'<text x="{W - PAD}" y="{sw_y + 15}" text-anchor="end" font-size="12" '
-        f'fill="{ACCENT}">./whoami --verbose</text>'
+
+        if static:
+            animation_style = ""
+            animation_class = ""
+        else:
+            delay = (
+                index
+                * ANIMATION_DELAY
+            )
+
+            animation_style = (
+                f' style="'
+                f'animation-delay:{delay:.2f}s"'
+            )
+
+            animation_class = ' class="animated-line"'
+
+        # ---------------------------------------------------------------
+        # Host
+        # ---------------------------------------------------------------
+
+        if kind == "host":
+
+            parts.append(
+                f'<text'
+                f'{animation_class}'
+                f'{animation_style} '
+                f'x="{PAD}" '
+                f'y="{y:.1f}" '
+                f'fill="{KEY}" '
+                f'font-weight="700">'
+                f'{escape(value)}'
+                f'</text>'
+            )
+
+        # ---------------------------------------------------------------
+        # Separator
+        # ---------------------------------------------------------------
+
+        elif kind == "rule":
+
+            parts.append(
+                f'<text'
+                f'{animation_class}'
+                f'{animation_style} '
+                f'x="{PAD}" '
+                f'y="{y:.1f}" '
+                f'fill="{DIM}">'
+                f'{escape(value)}'
+                f'</text>'
+            )
+
+        # ---------------------------------------------------------------
+        # Normal row
+        # ---------------------------------------------------------------
+
+        else:
+
+            label = (
+                f"{key}:".ljust(key_w)
+                if key
+                else " " * key_w
+            )
+
+            parts.append(
+                f'<text'
+                f'{animation_class}'
+                f'{animation_style} '
+                f'x="{PAD}" '
+                f'y="{y:.1f}" '
+                f'xml:space="preserve">'
+
+                f'<tspan '
+                f'fill="{KEY}" '
+                f'font-weight="700">'
+                f'{escape(label)}'
+                f'</tspan>'
+
+                f'<tspan '
+                f'fill="{VAL if key else DIM}">'
+                f'{escape(value)}'
+                f'</tspan>'
+
+                f'</text>'
+            )
+
+    # -----------------------------------------------------------------------
+    # Color swatches
+    # -----------------------------------------------------------------------
+
+    swatch_y = (
+        height
+        - PAD
+        - 12
     )
 
-    style = "" if static else (
-        # animation-fill-mode:both (not forwards) hides the line during its
-        # delay, and leaves it fully visible where animations never run.
-        "<style>"
-        "@keyframes in{from{opacity:0;transform:translateX(-14px)}"
-        "to{opacity:1;transform:translateX(0)}}"
-        ".ln{animation:in .42s ease-out both}"
-        "@media (prefers-reduced-motion:reduce){.ln{animation:none}}"
-        "</style>"
+    for index, color in enumerate(SWATCH):
+
+        if static:
+            animation_style = ""
+            animation_class = ""
+        else:
+            delay = (
+                len(items)
+                * ANIMATION_DELAY
+                + index * 0.08
+            )
+
+            animation_style = (
+                f' style="'
+                f'animation-delay:{delay:.2f}s"'
+            )
+
+            animation_class = ' class="animated-line"'
+
+        parts.append(
+            f'<rect'
+            f'{animation_class}'
+            f'{animation_style} '
+            f'x="{PAD + index * 26}" '
+            f'y="{swatch_y}" '
+            f'width="20" '
+            f'height="20" '
+            f'rx="4" '
+            f'fill="{color}" '
+            f'stroke="{STROKE}"/>'
+        )
+
+    # -----------------------------------------------------------------------
+    # Footer command
+    # -----------------------------------------------------------------------
+
+    parts.append(
+        f'<text '
+        f'x="{W - PAD}" '
+        f'y="{swatch_y + 15}" '
+        f'text-anchor="end" '
+        f'font-size="12" '
+        f'fill="{ACCENT}">'
+        f'./whoami --verbose'
+        f'</text>'
     )
+
+    # -----------------------------------------------------------------------
+    # CSS animation
+    # -----------------------------------------------------------------------
+
+    if static:
+
+        style = ""
+
+    else:
+
+        style = f"""
+<style>
+
+@keyframes neofetch-in-out {{
+    0% {{
+        opacity: 0;
+        transform: translateX(-20px);
+    }}
+
+    12% {{
+        opacity: 1;
+        transform: translateX(0);
+    }}
+
+    65% {{
+        opacity: 1;
+        transform: translateX(0);
+    }}
+
+    100% {{
+        opacity: 0;
+        transform: translateX(20px);
+    }}
+}}
+
+.animated-line {{
+    animation:
+        neofetch-in-out
+        {LOOP_DURATION:.1f}s
+        ease-in-out
+        infinite;
+}}
+
+@media (prefers-reduced-motion: reduce) {{
+    .animated-line {{
+        animation: none;
+        opacity: 1;
+        transform: none;
+    }}
+}}
+
+</style>
+"""
+
+    # -----------------------------------------------------------------------
+    # Final SVG
+    # -----------------------------------------------------------------------
 
     return (
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{height}" '
-        f'viewBox="0 0 {W} {height}" role="img" aria-label="Profile info card">'
-        f"{style}"
-        f'<g font-family="{MONO}" font-size="{FONT}">{"".join(parts)}</g></svg>'
+        f'<svg '
+        f'xmlns="http://www.w3.org/2000/svg" '
+        f'width="{W}" '
+        f'height="{height}" '
+        f'viewBox="0 0 {W} {height}" '
+        f'role="img" '
+        f'aria-label="Profile info card">'
+
+        f'{style}'
+
+        f'<g '
+        f'font-family="{MONO}" '
+        f'font-size="{FONT}">'
+
+        f'{"".join(parts)}'
+
+        f'</g>'
+
+        f'</svg>'
     )
 
 
 def match_portrait_height() -> float | None:
-    """Height that makes the card render as tall as the portrait beside it."""
+    """Match the card height to the ASCII portrait."""
+
     portrait = ROOT / "avi-ascii.svg"
+
     if not portrait.exists():
         return None
-    head = portrait.read_text(encoding="utf-8")[:400]
-    w = re.search(r'\bwidth="([\d.]+)"', head)
-    h = re.search(r'\bheight="([\d.]+)"', head)
-    if not (w and h):
+
+    head = portrait.read_text(
+        encoding="utf-8"
+    )[:400]
+
+    width_match = re.search(
+        r'\bwidth="([\d.]+)"',
+        head,
+    )
+
+    height_match = re.search(
+        r'\bheight="([\d.]+)"',
+        head,
+    )
+
+    if not width_match or not height_match:
         return None
-    rendered = float(h.group(1)) / float(w.group(1)) * ASCII_COL_W
-    return rendered / CARD_COL_W * W
+
+    portrait_width = float(
+        width_match.group(1)
+    )
+
+    portrait_height = float(
+        height_match.group(1)
+    )
+
+    rendered_height = (
+        portrait_height
+        / portrait_width
+        * ASCII_COL_W
+    )
+
+    return (
+        rendered_height
+        / CARD_COL_W
+        * W
+    )
 
 
 def main() -> int:
-    dst = ROOT / "info-card.svg"
-    dst.write_text(build(match_portrait_height()), encoding="utf-8")
-    print(f"wrote {dst}")
+    """Generate info-card.svg."""
+
+    output = ROOT / "info-card.svg"
+
+    target_height = match_portrait_height()
+
+    svg = build(target_height)
+
+    output.write_text(
+        svg,
+        encoding="utf-8",
+    )
+
+    print(
+        f"wrote {output}"
+    )
+
     return 0
 
 
