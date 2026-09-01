@@ -31,14 +31,14 @@ ROWS = [
 ]
 # ------------------------------------------------------------------------------
 
-W = 700
-PAD = 30
+W = 820
+PAD = 32
 BAR_H = 38
-FONT = 15
-LINE_H = 24
-MAX_LINE_H = 32     # cap so a tall card does not turn into double-spacing
+FONT = 18
+LINE_H = 30
+MAX_LINE_H = 38     # cap so a tall card does not turn into double-spacing
 BLOCK_GAP = 12
-WRAP = 46          # characters per value line before wrapping
+WRAP = 60          # characters per value line before wrapping
 
 BG = "#0d1117"
 BAR = "#161b22"

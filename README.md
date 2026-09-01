@@ -2,15 +2,17 @@
 
 <h3><code>Mahdi@github ~ $ ./contributions.sh</code></h3>
 
-<img src="./contrib-heatmap.svg" width="860" alt="Contribution heatmap, last 12 months" />
+<img src="./contrib-heatmap.svg" width="1100" alt="Contribution heatmap, last 12 months" />
 
 <br><br>
 
 <h3><code>Mahdi@github ~ $ whoami</code></h3>
 
-<img src="./whoami.svg" width="860" alt="ASCII portrait and info card" />
-
-<br>
+<img
+  src="./whoami.svg"
+  width="1100"
+  alt="Mahdi Hosseinabadi ASCII portrait and info card"
+/>
 
 <h3><code>Mahdi@github ~ $ cat contact.txt</code></h3>
 
