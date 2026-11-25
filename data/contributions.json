@@ -1,11 +1,11 @@
 {
   "username": "MahdiHosseinabadi",
-  "generated_at": "2026-11-25T07:38:23+00:00",
+  "generated_at": "2026-11-25T21:19:42+00:00",
   "range": {
     "from": "2025-11-23",
     "to": "2026-11-25"
   },
-  "total": 351,
+  "total": 352,
   "days": [
     {
       "date": "2025-11-23",
@@ -1844,19 +1844,19 @@
     },
     {
       "date": "2026-11-25",
-      "count": 0,
-      "level": 0
+      "count": 1,
+      "level": 1
     }
   ],
   "stats": {
-    "current_streak": 86,
-    "longest_streak": 86,
+    "current_streak": 87,
+    "longest_streak": 87,
     "best_day": {
       "date": "2026-09-01",
       "count": 20
     },
-    "active_days": 86,
-    "daily_average": 0.95,
+    "active_days": 87,
+    "daily_average": 0.96,
     "monthly": {
       "2025-11": 0,
       "2025-12": 0,
@@ -1870,7 +1870,7 @@
       "2026-08": 7,
       "2026-09": 178,
       "2026-10": 106,
-      "2026-11": 60
+      "2026-11": 61
     }
   }
 }
